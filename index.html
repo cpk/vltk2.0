@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trang bị ngũ hành — Võ Lâm Truyền Kỳ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Cinzel:wght@500;600&family=Noto+Serif:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0c; --bg2:#101015; --slot:#15141a; --slot2:#1b1a22;
+    --line:#2a2620; --bronze:#6e5a2e; --bronze2:#8c7339;
+    --gold:#cdab53; --gold-dim:#9a813f;
+    --txt:#e9e1cc; --txt2:#9c917a; --txt3:#6c6555;
+    --kim:#e6ddbf; --moc:#3fad6c; --thuy:#3d8ad6; --hoa:#d8463c; --tho:#e0a82a;
+    --ok:#5fc8a0; --r:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(680px 420px at 50% 30%, #1a1813 0%, transparent 70%),var(--bg);
+    color:var(--txt);font-family:"Be Vietnam Pro",system-ui,sans-serif;padding:0 14px 80px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1060px;margin:0 auto}
+
+  header{text-align:center;padding:34px 0 14px}
+  .eyebrow{font-family:"Cinzel",serif;font-size:12px;letter-spacing:.34em;color:var(--gold-dim)}
+  h1{font-family:"Noto Serif",serif;font-weight:600;font-size:clamp(24px,4.5vw,36px);margin:4px 0 6px}
+  h1 .a{color:var(--gold)}
+  .sub{color:var(--txt2);font-size:14px;max-width:620px;margin:0 auto}
+
+  .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:14px;justify-content:center;
+    border:1px solid var(--line);border-radius:var(--r);background:var(--bg2);padding:12px 16px;margin:18px auto 16px}
+  .count{display:flex;align-items:baseline;gap:8px}
+  .count .n{font-family:"Noto Serif",serif;font-size:26px;color:var(--gold)}
+  .count .l{font-size:13px;color:var(--txt2)}
+  .tsep{width:1px;height:26px;background:var(--line)}
+  .tlabel{font-size:13px;color:var(--txt2)}
+  select,button{font-family:inherit;font-size:13px;border-radius:8px;border:1px solid var(--bronze);
+    background:var(--slot2);color:var(--txt);padding:7px 12px;cursor:pointer;transition:.15s}
+  select:hover,button:hover{border-color:var(--gold-dim);color:var(--gold)}
+  button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  button.ghost{background:transparent}
+
+  .charbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border:1px solid var(--gold-dim);
+    border-radius:var(--r);background:linear-gradient(0deg,#15120b,#1b1710);padding:13px 18px;margin:0 0 22px}
+  .charbar .cl{font-family:"Noto Serif",serif;font-weight:600;color:var(--gold);font-size:15px}
+  .charbar .hint{font-size:12px;color:var(--txt3);flex-basis:100%}
+
+  .board{display:grid;grid-template-columns:1fr 1.04fr 1fr;gap:14px;align-items:start}
+  .board-eq{align-items:stretch}
+  .board-eq .slot.grow{flex:1 1 auto}
+  .col{display:flex;flex-direction:column;gap:13px}
+
+  /* Ô chi tiết (như hình 1) */
+  .slot{border:1px solid var(--bronze);border-radius:var(--r);background:var(--slot);padding:12px 13px;transition:.18s}
+  .slot.full{border-color:var(--gold);box-shadow:0 0 0 1px rgba(205,171,83,.25),0 0 22px -8px rgba(205,171,83,.5)}
+  .slot .hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+  .slot .nm{font-family:"Noto Serif",serif;font-weight:600;color:var(--gold);font-size:15px}
+  .slot .role{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3);border:1px solid var(--line);border-radius:5px;padding:2px 6px}
+  .slot .elname{font-size:12px;font-weight:600}
+  .chips{display:flex;gap:5px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:#1d1c24;border-radius:999px;padding:3px 9px 3px 7px;font-size:12px;font-weight:600;color:var(--txt);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.13s;user-select:none}
+  .chip .dot{width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.4) inset}
+  .chip:hover{border-color:var(--gold-dim)}
+  .chip[aria-pressed="true"]{background:#2a2614;border-color:currentColor}
+  .chip.kim{color:var(--kim)} .chip.kim .dot{background:var(--kim)}
+  .chip.moc{color:var(--moc)} .chip.moc .dot{background:var(--moc)}
+  .chip.thuy{color:var(--thuy)} .chip.thuy .dot{background:var(--thuy)}
+  .chip.hoa{color:var(--hoa)} .chip.hoa .dot{background:var(--hoa)}
+  .chip.tho{color:var(--tho)} .chip.tho .dot{background:var(--tho)}
+  .srcrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0;font-size:11.5px}
+  .srcrow .srl{color:var(--txt3);margin-right:2px}
+  .src{border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--txt3);background:#16151b;display:inline-flex;align-items:center;gap:5px}
+  .src .tick{font-size:10px}
+  .lines{display:flex;flex-direction:column;gap:6px}
+  .line{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:8px;background:#16151b;padding:6px 9px;font-size:12.5px}
+  .line .ln{color:var(--txt2)}
+  .line .ln .req{font-size:11px;color:var(--txt3);margin-left:6px}
+  .line .st{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--txt3);white-space:nowrap}
+  .line .gem{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.45}
+  .line.on{background:#1c1b18}
+  .line.on .ln{color:var(--txt)}
+  .line.on .st{color:var(--ec,#cdab53)}
+  .line.on .gem{opacity:1;animation:pulse 2.3s ease-in-out infinite}
+
+  /* Lưới thẻ rút gọn */
+  .summary{margin-top:30px}
+  .summary .stitle{font-family:"Noto Serif",serif;font-size:18px;font-weight:600;margin:0 2px 14px}
+  .mini{border:1px solid var(--bronze);border-radius:var(--r);background:var(--slot);padding:11px 13px}
+  .mini.full{border-color:var(--gold);box-shadow:0 0 0 1px rgba(205,171,83,.2)}
+  .mini .mh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+  .mini .mn{font-family:"Noto Serif",serif;font-weight:600;color:var(--gold);font-size:14px}
+  .mini .mel{font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+  .mini .mel .d{width:9px;height:9px;border-radius:50%}
+  .mini .mel.none{color:var(--txt3)}
+  .mrow{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;padding:3px 0}
+  .mrow .k{color:var(--txt2)}
+  .mrow .v{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--txt3)}
+  .mrow .v .sd{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.5}
+  .mrow .v.on{color:var(--ok)} .mrow .v.on .sd{opacity:1}
+
+  .ref{margin-top:26px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg2);padding:16px 20px}
+  .ref h2{font-family:"Noto Serif",serif;font-size:15px;font-weight:600;margin-bottom:8px}
+  .ref p{font-size:13px;color:var(--txt2);margin:3px 0}
+  .ref .sinh{color:var(--moc);font-weight:600}
+  .ref .khac{color:var(--hoa);font-weight:600}
+  .ref .foot{color:var(--txt3);font-size:12px;margin-top:12px;border-top:1px solid var(--line);padding-top:11px}
+
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+  @media (max-width:820px){ .board{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">VÕ LÂM TRUYỀN KỲ</div>
+    <h1>Trang bị <span class="a">ngũ hành</span></h1>
+    <p class="sub">Mỗi món có 3 dòng ẩn. Gộp 3 nguồn (ngũ hành nhân vật + 2 món ở cặp trước): bao nhiêu nguồn đúng hệ "mẹ" thì sáng bấy nhiêu dòng, theo thứ tự Ẩn 1 → Ẩn 2 → Ẩn 3.</p>
+  </header>
+
+  <div class="toolbar">
+    <div class="count"><span class="n" id="cnt">0</span><span class="l">/ 30 dòng đã sáng</span></div>
+    <div class="tsep"></div>
+    <span class="tlabel">Tự xếp hệ theo vũ khí:</span>
+    <select id="autoSel">
+      <option value="">— chọn hệ —</option>
+      <option value="kim">Kim</option><option value="moc">Mộc</option>
+      <option value="thuy">Thủy</option><option value="hoa">Hỏa</option><option value="tho">Thổ</option>
+    </select>
+    <button class="ghost" id="btnReset">Xóa hết</button>
+  </div>
+
+  <div class="charbar">
+    <span class="cl">Ngũ hành nhân vật</span>
+    <div class="chips" id="charChips"></div>
+    <div class="hint" id="charHint"></div>
+  </div>
+
+  <div class="board board-eq">
+    <div class="col" id="colLeft"></div>
+    <div class="col" id="colCenter"></div>
+    <div class="col" id="colRight"></div>
+  </div>
+
+  <section class="summary">
+    <div class="stitle">Thông tin trang bị</div>
+    <div class="board">
+      <div class="col" id="sumLeft"></div>
+      <div class="col" id="sumCenter"></div>
+      <div class="col" id="sumRight"></div>
+    </div>
+  </section>
+
+  <section class="ref">
+    <h2>Cách kích dòng ẩn</h2>
+    <p>Món hệ E cần hệ "mẹ" (hệ sinh ra E). Nguồn: <b>ngũ hành nhân vật</b> + <b>2 món ở cặp đứng trước</b>. 1 nguồn → Ẩn 1 · 2 nguồn → Ẩn 1+2 · đủ 3 → cả Ẩn 1, 2, 3.</p>
+    <p><span class="sinh">Tương sinh:</span> Mộc → Hỏa → Thổ → Kim → Thủy → Mộc &nbsp;·&nbsp; <span class="khac">Tương khắc</span> (bỏ qua khi phối): Mộc khắc Thổ · Thổ khắc Thủy · Thủy khắc Hỏa · Hỏa khắc Kim · Kim khắc Mộc</p>
+    <p class="foot">Chiều ghép cặp có thể lệch chút theo phiên bản server — đối chiếu với bảng "Ngũ Hành" trong game của bạn.</p>
+  </section>
+
+</div>
+
+<script>
+  const ELEMENTS=[{id:'kim',name:'Kim',hex:'#e6ddbf'},{id:'moc',name:'Mộc',hex:'#3fad6c'},
+    {id:'thuy',name:'Thủy',hex:'#3d8ad6'},{id:'hoa',name:'Hỏa',hex:'#d8463c'},{id:'tho',name:'Thổ',hex:'#e0a82a'}];
+  const HEX=Object.fromEntries(ELEMENTS.map(e=>[e.id,e.hex]));
+  const NAME=Object.fromEntries(ELEMENTS.map(e=>[e.id,e.name]));
+  const SINH={moc:'hoa',hoa:'tho',tho:'kim',kim:'thuy',thuy:'moc'};
+  const MOTHER={}; for(const x in SINH){ MOTHER[SINH[x]]=x; }
+
+  const SLOTS=[
+    {key:'mu',         label:'Mũ',         role:'Đầu',     col:'center'},
+    {key:'trang_phuc', label:'Trang phục', role:'Áo',      col:'center'},
+    {key:'that_lung',  label:'Thắt lưng',  role:'Đai',     col:'center'},
+    {key:'bao_tay',    label:'Bao cổ tay', role:'Hộ uyển', col:'left'},
+    {key:'nhan_tren',  label:'Nhẫn trên',  role:'Nhẫn',    col:'left'},
+    {key:'nhan_duoi',  label:'Nhẫn dưới',  role:'Nhẫn',    col:'left'},
+    {key:'ngoc_boi',   label:'Ngọc bội',   role:'Bội',     col:'left'},
+    {key:'day_chuyen', label:'Dây chuyền', role:'Cổ',      col:'right'},
+    {key:'vu_khi',     label:'Vũ khí',     role:'Vũ khí',  col:'right'},
+    {key:'giay',       label:'Giày',       role:'Chân',    col:'right'},
+  ];
+  const SLOTMAP=Object.fromEntries(SLOTS.map(s=>[s.key,s]));
+
+  const PAIR_ORDER=[['day_chuyen','trang_phuc'],['vu_khi','mu'],['nhan_tren','giay'],['bao_tay','ngoc_boi'],['nhan_duoi','that_lung']];
+  const WEAPON_PAIR=1;
+  const PAIR_INDEX={}; PAIR_ORDER.forEach((pr,i)=>pr.forEach(k=>PAIR_INDEX[k]=i));
+  function feedersOf(key){ const k=PAIR_INDEX[key]; return PAIR_ORDER[(k+PAIR_ORDER.length-1)%PAIR_ORDER.length]; }
+
+  const STORE='vltk_trangbi_v5';
+  let state={char:null}; SLOTS.forEach(s=>state[s.key]={el:null});
+  try{ const raw=localStorage.getItem(STORE); if(raw){ const d=JSON.parse(raw)||{};
+    if(d.char) state.char=d.char; SLOTS.forEach(s=>{ if(d[s.key]&&d[s.key].el) state[s.key].el=d[s.key].el; }); } }catch(e){}
+  function save(){ try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){} }
+
+  function matches(key){
+    const el=state[key].el; if(!el) return {need:null,mChar:false,mA:false,mB:false,count:0,feeders:feedersOf(key)};
+    const need=MOTHER[el]; const f=feedersOf(key);
+    const mChar=state.char===need, mA=state[f[0]].el===need, mB=state[f[1]].el===need;
+    return {need,mChar,mA,mB,count:(mChar?1:0)+(mA?1:0)+(mB?1:0),feeders:f};
+  }
+
+  function srcPill(label,on,hex){
+    const style=on?` style="color:${hex};border-color:${hex};font-weight:600"`:'';
+    return `<span class="src"${style}><span class="tick">${on?'✓':'—'}</span>${label}</span>`;
+  }
+
+  function makeCard(slot){
+    const card=document.createElement('div'); card.className='slot'+((slot.key==='trang_phuc'||slot.key==='vu_khi')?' grow':'');
+    const el=state[slot.key].el; const m=matches(slot.key);
+
+    const hd=document.createElement('div'); hd.className='hd';
+    hd.innerHTML=`<span class="nm">${slot.label}</span>`+
+      (el?`<span class="elname" style="color:${HEX[el]}">Hệ ${NAME[el]}</span>`:`<span class="role">${slot.role}</span>`);
+    card.appendChild(hd);
+
+    const chips=document.createElement('div'); chips.className='chips';
+    ELEMENTS.forEach(e=>{
+      const c=document.createElement('button'); c.className=`chip ${e.id}`;
+      c.setAttribute('aria-pressed', el===e.id?'true':'false');
+      c.innerHTML=`<span class="dot"></span>${e.name}`;
+      c.addEventListener('click',()=>{ state[slot.key].el=(state[slot.key].el===e.id)?null:e.id; save(); render(); });
+      chips.appendChild(c);
+    });
+    card.appendChild(chips);
+
+    const sr=document.createElement('div'); sr.className='srcrow';
+    if(!el){ sr.innerHTML=`<span class="srl">Chọn hệ để xem nguồn kích</span>`; }
+    else{
+      const fA=SLOTMAP[m.feeders[0]].label, fB=SLOTMAP[m.feeders[1]].label;
+      sr.innerHTML=`<span class="srl">Nguồn hệ ${NAME[m.need]}:</span>`+
+        srcPill('Nhân vật',m.mChar,HEX[el])+srcPill(fA,m.mA,HEX[el])+srcPill(fB,m.mB,HEX[el]);
+    }
+    card.appendChild(sr);
+
+    const lines=document.createElement('div'); lines.className='lines';
+    const reqs=['cần ≥1 nguồn','cần ≥2 nguồn','cần đủ 3 nguồn'];
+    [0,1,2].forEach(i=>{
+      const on=m.count>=(i+1);
+      const ln=document.createElement('div'); ln.className='line'+(on?' on':'');
+      if(on) ln.style.setProperty('--ec',HEX[el]);
+      ln.innerHTML=`<span class="ln">Ẩn ${i+1}<span class="req">${el?reqs[i]:''}</span></span>
+        <span class="st"><span class="gem"></span>${on?'Đã kích':'Chưa kích'}</span>`;
+      lines.appendChild(ln);
+    });
+    card.appendChild(lines);
+    if(m.count===3) card.classList.add('full');
+    return card;
+  }
+
+  function makeMini(slot){
+    const el=state[slot.key].el; const m=matches(slot.key);
+    const card=document.createElement('div'); card.className='mini'+(m.count===3?' full':'');
+    const elBadge=el?`<span class="mel" style="color:${HEX[el]}"><span class="d" style="background:${HEX[el]}"></span>${NAME[el]}</span>`
+                    :`<span class="mel none">—</span>`;
+    let rows='';
+    [1,2,3].forEach(i=>{ const on=el&&m.count>=i;
+      rows+=`<div class="mrow"><span class="k">Ẩn ${i}</span><span class="v${on?' on':''}"><span class="sd"></span>${on?'Đã kích':'Chưa kích'}</span></div>`; });
+    card.innerHTML=`<div class="mh"><span class="mn">${slot.label}</span>${elBadge}</div>${rows}`;
+    return card;
+  }
+
+  function renderChar(){
+    const wrap=document.getElementById('charChips'); wrap.innerHTML='';
+    ELEMENTS.forEach(e=>{
+      const c=document.createElement('button'); c.className=`chip ${e.id}`;
+      c.setAttribute('aria-pressed', state.char===e.id?'true':'false');
+      c.innerHTML=`<span class="dot"></span>${e.name}`;
+      c.addEventListener('click',()=>{ state.char=(state.char===e.id)?null:e.id; save(); render(); });
+      wrap.appendChild(c);
+    });
+    document.getElementById('charHint').textContent = state.char
+      ? `Nhân vật hệ ${NAME[state.char]} → góp 1 nguồn kích cho mọi món hệ ${NAME[SINH[state.char]]}`
+      : 'Chọn hệ nhân vật để góp thêm 1 nguồn kích cho các món hợp hệ';
+  }
+
+  function render(){
+    renderChar();
+    const cols={left:colLeft,center:colCenter,right:colRight};
+    const sums={left:sumLeft,center:sumCenter,right:sumRight};
+    for(const k in cols){ cols[k].innerHTML=''; sums[k].innerHTML=''; }
+    SLOTS.forEach(s=>{ cols[s.col].appendChild(makeCard(s)); sums[s.col].appendChild(makeMini(s)); });
+    let n=0; SLOTS.forEach(s=>{ n+=matches(s.key).count; });
+    document.getElementById('cnt').textContent=n;
+  }
+  const colLeft=document.getElementById('colLeft'),colCenter=document.getElementById('colCenter'),colRight=document.getElementById('colRight');
+  const sumLeft=document.getElementById('sumLeft'),sumCenter=document.getElementById('sumCenter'),sumRight=document.getElementById('sumRight');
+
+  document.getElementById('autoSel').addEventListener('change',e=>{
+    const w=e.target.value; if(!w) return;
+    let el=w,k=WEAPON_PAIR;
+    for(let i=0;i<PAIR_ORDER.length;i++){ PAIR_ORDER[k].forEach(key=>{ state[key].el=el; }); el=SINH[el]; k=(k+1)%PAIR_ORDER.length; }
+    save(); render(); e.target.value='';
+  });
+  document.getElementById('btnReset').addEventListener('click',()=>{
+    state={char:null}; SLOTS.forEach(s=>{ state[s.key]={el:null}; }); save(); render();
+  });
+
+  render();
+</script>
+</body>
+</html>
