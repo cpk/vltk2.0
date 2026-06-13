@@ -54,6 +54,16 @@
   .accbar input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   .accbar .accnote{font-size:12px;color:var(--txt3);flex-basis:100%}
 
+  .backupbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;border:1px solid var(--line);
+    border-radius:var(--r);background:var(--bg2);padding:12px 16px;margin:0 0 22px}
+  .backupbar .cl{font-family:"Noto Serif",serif;font-weight:600;color:var(--gold);font-size:15px;margin-right:2px}
+  .backupbar .bknote{font-size:12px;color:var(--ok);flex-basis:100%;min-height:0}
+  .bkpaste{flex-basis:100%;font-size:12px;color:var(--txt2)}
+  .bkpaste summary{cursor:pointer;color:var(--txt2);padding:4px 0}
+  .bkpaste textarea{width:100%;min-height:74px;margin:8px 0;border-radius:8px;border:1px solid var(--bronze);
+    background:var(--slot2);color:var(--txt);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;padding:9px;resize:vertical}
+  .bkpaste textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
   .board{display:grid;grid-template-columns:1fr 1.04fr 1fr;gap:14px;align-items:start}
   .board-eq{align-items:stretch}
   .board-eq .slot.grow{flex:1 1 auto}
@@ -137,6 +147,20 @@
     <span class="accnote" id="accNote"></span>
   </div>
 
+  <div class="backupbar">
+    <span class="cl">Sao lưu / Khôi phục</span>
+    <button id="bkExport">⬇ Tải file sao lưu</button>
+    <button id="bkImport">⬆ Khôi phục từ file</button>
+    <button id="bkCopy" class="ghost">Copy mã</button>
+    <input type="file" id="bkFile" accept="application/json,.json" hidden>
+    <span class="bknote" id="bkNote"></span>
+    <details class="bkpaste" id="bkPasteWrap">
+      <summary>Hoặc dùng mã sao lưu (copy ở máy này, dán ở máy kia)…</summary>
+      <textarea id="bkText" placeholder="Dán mã sao lưu vào đây rồi bấm Nạp…"></textarea>
+      <button id="bkPaste">Nạp từ mã</button>
+    </details>
+  </div>
+
   <div class="toolbar">
     <div class="count"><span class="n" id="cnt">0</span><span class="l">/ 30 dòng đã sáng</span></div>
     <div class="tsep"></div>
@@ -209,9 +233,9 @@
   // ----- Lưu theo tài khoản -----
   const LS_ACCOUNTS='vltk_accounts', LS_CURRENT='vltk_current', ACC_PREFIX='vltk_acc:', OLD_KEY='vltk_trangbi_v5';
   function emptyState(){ const s={char:null}; SLOTS.forEach(x=>s[x.key]={el:null}); return s; }
+  function normalizeState(d){ const s=emptyState(); if(d&&d.char) s.char=d.char; if(d) SLOTS.forEach(x=>{ if(d[x.key]&&d[x.key].el) s[x.key].el=d[x.key].el; }); return s; }
   function readAccountState(name){
-    try{ const raw=localStorage.getItem(ACC_PREFIX+name); if(raw){ const d=JSON.parse(raw)||{}; const s=emptyState();
-      if(d.char) s.char=d.char; SLOTS.forEach(x=>{ if(d[x.key]&&d[x.key].el) s[x.key].el=d[x.key].el; }); return s; } }catch(e){}
+    try{ const raw=localStorage.getItem(ACC_PREFIX+name); if(raw) return normalizeState(JSON.parse(raw)); }catch(e){}
     return emptyState();
   }
   let accounts=[], current=null, state=emptyState();
@@ -356,6 +380,50 @@
   document.getElementById('accAdd').addEventListener('click',addAccount);
   document.getElementById('accNew').addEventListener('keydown',e=>{ if(e.key==='Enter') addAccount(); });
   document.getElementById('accDelete').addEventListener('click',deleteAccount);
+
+  // ----- Sao lưu / Khôi phục -----
+  function bkNote(msg,ok){ const n=document.getElementById('bkNote'); n.textContent=msg; n.style.color=ok===false?'#d8463c':'var(--ok)';
+    if(bkNote._t) clearTimeout(bkNote._t); bkNote._t=setTimeout(()=>{ n.textContent=''; },5000); }
+  function exportAll(){ save(); const out={app:'vltk-ngu-hanh',version:1,exportedAt:new Date().toISOString(),current,accounts:{}};
+    accounts.forEach(a=>{ out.accounts[a]=readAccountState(a); }); return out; }
+  function importData(obj){
+    if(!obj||typeof obj!=='object'||!obj.accounts||typeof obj.accounts!=='object'){ bkNote('Dữ liệu không hợp lệ.',false); return false; }
+    const names=Object.keys(obj.accounts);
+    if(!names.length){ bkNote('Không có tài khoản trong dữ liệu.',false); return false; }
+    let added=0;
+    names.forEach(name=>{ const s=normalizeState(obj.accounts[name]);
+      try{ localStorage.setItem(ACC_PREFIX+name, JSON.stringify(s)); }catch(e){}
+      if(accounts.indexOf(name)<0){ accounts.push(name); added++; } });
+    if(obj.current && accounts.indexOf(obj.current)>=0) current=obj.current;
+    saveMeta(); state=readAccountState(current); renderAccounts(); render();
+    bkNote(`Đã khôi phục ${names.length} tài khoản (${added} mới).`);
+    return true;
+  }
+  function pad(n){ return (n<10?'0':'')+n; }
+  document.getElementById('bkExport').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(exportAll(),null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); const d=new Date();
+    const stamp=d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes());
+    a.href=url; a.download='vltk-ngu-hanh-backup-'+stamp+'.json'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500); bkNote('Đã tải file sao lưu.');
+  });
+  document.getElementById('bkImport').addEventListener('click',()=>document.getElementById('bkFile').click());
+  document.getElementById('bkFile').addEventListener('change',e=>{
+    const f=e.target.files&&e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{ importData(JSON.parse(r.result)); }catch(err){ bkNote('File không đọc được (không phải JSON hợp lệ).',false); } };
+    r.onerror=()=>bkNote('Không đọc được file.',false); r.readAsText(f); e.target.value='';
+  });
+  document.getElementById('bkCopy').addEventListener('click',async()=>{
+    const text=JSON.stringify(exportAll());
+    try{ await navigator.clipboard.writeText(text); bkNote('Đã copy mã sao lưu vào clipboard.'); }
+    catch(e){ const ta=document.getElementById('bkText'); ta.value=text; document.getElementById('bkPasteWrap').open=true; ta.focus(); ta.select();
+      bkNote('Trình duyệt chặn clipboard — mã đã hiện ở ô bên dưới để bạn copy thủ công.',false); }
+  });
+  document.getElementById('bkPaste').addEventListener('click',()=>{
+    const v=(document.getElementById('bkText').value||'').trim(); if(!v){ bkNote('Chưa có mã để nạp.',false); return; }
+    try{ importData(JSON.parse(v)); }catch(err){ bkNote('Mã không hợp lệ.',false); }
+  });
 
   loadAccountsMeta();
   state=readAccountState(current);
