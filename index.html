@@ -45,6 +45,15 @@
   .charbar .cl{font-family:"Noto Serif",serif;font-weight:600;color:var(--gold);font-size:15px}
   .charbar .hint{font-size:12px;color:var(--txt3);flex-basis:100%}
 
+  .accbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;border:1px solid var(--bronze2);
+    border-radius:var(--r);background:var(--bg2);padding:12px 16px;margin:0 0 14px}
+  .accbar .cl{font-family:"Noto Serif",serif;font-weight:600;color:var(--gold);font-size:15px;margin-right:2px}
+  .accbar input{font-family:inherit;font-size:13px;border-radius:8px;border:1px solid var(--bronze);
+    background:var(--slot2);color:var(--txt);padding:7px 12px;min-width:170px}
+  .accbar input::placeholder{color:var(--txt3)}
+  .accbar input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .accbar .accnote{font-size:12px;color:var(--txt3);flex-basis:100%}
+
   .board{display:grid;grid-template-columns:1fr 1.04fr 1fr;gap:14px;align-items:start}
   .board-eq{align-items:stretch}
   .board-eq .slot.grow{flex:1 1 auto}
@@ -119,6 +128,15 @@
     <p class="sub">Mỗi món có 3 dòng ẩn. Gộp 3 nguồn (ngũ hành nhân vật + 2 món ở cặp trước): bao nhiêu nguồn đúng hệ "mẹ" thì sáng bấy nhiêu dòng, theo thứ tự Ẩn 1 → Ẩn 2 → Ẩn 3.</p>
   </header>
 
+  <div class="accbar">
+    <span class="cl">Tài khoản</span>
+    <select id="accSelect"></select>
+    <input id="accNew" type="text" placeholder="Tên tài khoản mới…" maxlength="40">
+    <button id="accAdd">Thêm</button>
+    <button id="accDelete" class="ghost">Xoá tài khoản</button>
+    <span class="accnote" id="accNote"></span>
+  </div>
+
   <div class="toolbar">
     <div class="count"><span class="n" id="cnt">0</span><span class="l">/ 30 dòng đã sáng</span></div>
     <div class="tsep"></div>
@@ -188,11 +206,27 @@
   const PAIR_INDEX={}; PAIR_ORDER.forEach((pr,i)=>pr.forEach(k=>PAIR_INDEX[k]=i));
   function feedersOf(key){ const k=PAIR_INDEX[key]; return PAIR_ORDER[(k+PAIR_ORDER.length-1)%PAIR_ORDER.length]; }
 
-  const STORE='vltk_trangbi_v5';
-  let state={char:null}; SLOTS.forEach(s=>state[s.key]={el:null});
-  try{ const raw=localStorage.getItem(STORE); if(raw){ const d=JSON.parse(raw)||{};
-    if(d.char) state.char=d.char; SLOTS.forEach(s=>{ if(d[s.key]&&d[s.key].el) state[s.key].el=d[s.key].el; }); } }catch(e){}
-  function save(){ try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){} }
+  // ----- Lưu theo tài khoản -----
+  const LS_ACCOUNTS='vltk_accounts', LS_CURRENT='vltk_current', ACC_PREFIX='vltk_acc:', OLD_KEY='vltk_trangbi_v5';
+  function emptyState(){ const s={char:null}; SLOTS.forEach(x=>s[x.key]={el:null}); return s; }
+  function readAccountState(name){
+    try{ const raw=localStorage.getItem(ACC_PREFIX+name); if(raw){ const d=JSON.parse(raw)||{}; const s=emptyState();
+      if(d.char) s.char=d.char; SLOTS.forEach(x=>{ if(d[x.key]&&d[x.key].el) s[x.key].el=d[x.key].el; }); return s; } }catch(e){}
+    return emptyState();
+  }
+  let accounts=[], current=null, state=emptyState();
+  function saveMeta(){ try{ localStorage.setItem(LS_ACCOUNTS, JSON.stringify(accounts)); localStorage.setItem(LS_CURRENT, current); }catch(e){} }
+  function save(){ try{ localStorage.setItem(ACC_PREFIX+current, JSON.stringify(state)); }catch(e){} } // tự lưu vào account đang chọn
+  function loadAccountsMeta(){
+    try{ const raw=localStorage.getItem(LS_ACCOUNTS); if(raw) accounts=JSON.parse(raw)||[]; }catch(e){ accounts=[]; }
+    try{ current=localStorage.getItem(LS_CURRENT)||null; }catch(e){ current=null; }
+    if(!accounts.length){
+      accounts=['Mặc định']; current='Mặc định';
+      try{ const old=localStorage.getItem(OLD_KEY); if(old) localStorage.setItem(ACC_PREFIX+'Mặc định', old); }catch(e){} // chuyển cấu hình cũ
+      saveMeta();
+    }
+    if(!current || accounts.indexOf(current)<0) current=accounts[0];
+  }
 
   function matches(key){
     const el=state[key].el; if(!el) return {need:null,mChar:false,mA:false,mB:false,count:0,feeders:feedersOf(key)};
@@ -294,9 +328,38 @@
     save(); render(); e.target.value='';
   });
   document.getElementById('btnReset').addEventListener('click',()=>{
-    state={char:null}; SLOTS.forEach(s=>{ state[s.key]={el:null}; }); save(); render();
+    state=emptyState(); save(); render();
   });
 
+  // ----- Account UI -----
+  function renderAccounts(){
+    const sel=document.getElementById('accSelect'); sel.innerHTML='';
+    accounts.forEach(a=>{ const o=document.createElement('option'); o.value=a; o.textContent=a; if(a===current)o.selected=true; sel.appendChild(o); });
+    document.getElementById('accNote').textContent=`Đang dùng: ${current} · đã lưu ${accounts.length} tài khoản · cấu hình tự lưu khi bạn chỉnh`;
+  }
+  function switchAccount(name){ if(accounts.indexOf(name)<0) return; current=name; saveMeta(); state=readAccountState(name); renderAccounts(); render(); }
+  function addAccount(){
+    const inp=document.getElementById('accNew'); let name=(inp.value||'').trim();
+    if(!name){ inp.focus(); return; }
+    if(accounts.indexOf(name)>=0){ inp.value=''; switchAccount(name); return; }
+    accounts.push(name); current=name; state=emptyState(); save(); saveMeta(); inp.value=''; renderAccounts(); render();
+  }
+  function deleteAccount(){
+    if(!confirm(`Xoá tài khoản "${current}" và toàn bộ cấu hình đã lưu của nó?`)) return;
+    try{ localStorage.removeItem(ACC_PREFIX+current); }catch(e){}
+    accounts=accounts.filter(a=>a!==current);
+    if(!accounts.length){ accounts=['Mặc định']; current='Mặc định'; state=emptyState(); save(); }
+    else { current=accounts[0]; state=readAccountState(current); }
+    saveMeta(); renderAccounts(); render();
+  }
+  document.getElementById('accSelect').addEventListener('change',e=>switchAccount(e.target.value));
+  document.getElementById('accAdd').addEventListener('click',addAccount);
+  document.getElementById('accNew').addEventListener('keydown',e=>{ if(e.key==='Enter') addAccount(); });
+  document.getElementById('accDelete').addEventListener('click',deleteAccount);
+
+  loadAccountsMeta();
+  state=readAccountState(current);
+  renderAccounts();
   render();
 </script>
 </body>
